@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-    
+
     <record id="action_visita" model="ir.actions.act_window">
         <field name="name">visita</field>
         <field name="type">ir.actions.act_window</field>
@@ -15,7 +15,7 @@
         <field name="model">gestion_visitas.visita</field>
         <field name="arch" type="xml">
             <calendar string="Calendario de visitas" date_start="hora_programada"
-                      event_open_popup="0" create="0" color="contact_id">
+                      event_open_popup="1" create="1" color="estado">
                 <field name="rutero_id"/>
                 <field name="hora_programada"/>
                 <field name="estado"/>
@@ -55,47 +55,20 @@
         <field name="name">gestion_visitas.visita.form</field>
         <field name="model">gestion_visitas.visita</field>
         <field name="arch" type="xml">
+
             <form>
-                <sheet>
-                    <group string="Detalles Generales">
-                        <field name="estado" readonly="True"/>
-                        <field name="contact_id"/>
-                        <field name="direccion_contacto"/>
-                        <field name="motivo"/>
-                        <field name="hora_programada"/>
-                        <field name="rutero_id"/>
-                    </group>
 
-                    <group string="Resultado De La Visita"
-                           invisible="estado == 'sin planificar' or estado == 'planificado'">
-                        <field name="hora_inicio_visita" readonly="True"/>
-                        <field name="hora_fin_visita" readonly="True"/>
+                <header>
+                    <div class="oe_button_box" name="button_box" invisible="estado == 'sin planificar'">
+                        <button class="oe_stat_button" type="object"
+                                name="open_opportunities"
+                                icon="fa-address-book-o">
+                        <field string="Oportunidades" name="oportunity_count" widget="statinfo"/>
+                         </button>
 
-                        <field name="efectiva" invisible="not hora_inicio_visita"
-                               readonly="estado == 'finalizado'"/>
-                        <field name="razon_no_venta" invisible="efectiva == True"
-                               readonly="estado == 'finalizado'"/>
-                        <field name="nueva_fecha_programada" invisible="razon_no_venta != 're-agendar'" required="True"/>
-
-                        <field name="descripcion_no_venta"
-                               invisible="efectiva == True or razon_no_venta == 're-agendar'" widget="text"
-                               readonly="estado == 'finalizado'"
-                               required="True"/>
-
-                        <field name="descripcion_motivo_reagendado"
-                               widget="text"
-                               string="Descripcion de Motivo de Re-Agenda"
-                               invisible="efectiva == True or razon_no_venta != 're-agendar'"
-                               required="True"/>
-
-                        <field name="visit_images" widget="many2many_binary"
-                               invisible="not hora_inicio_visita or razon_no_venta == 're-agendar'"
-                               readonly="estado == 'finalizado'"/>
-                        <field name="observaciones" widget="text"
-                               readonly="estado == 'finalizado'"
-                               invisible="razon_no_venta == 're-agendar'"
-                               required="estado == 'en curso'"/>ç
-                    </group>
+                    </div>
+                    <button string="Planificar Visita" class="oe_highlight" invisible="estado != 'sin planificar'"
+                            type="object" name="action_guardar_datos"/>
                     <button string="Iniciar Visita" class="btn-primary" type="object"
                             name="action_iniciar_visita" invisible="estado != 'planificado'"/>
                     <button string="Terminar Visita" class="btn-danger" type="object"
@@ -103,6 +76,79 @@
                             invisible="estado != 'en curso'"
                     />
 
+                    <field name="estado" widget="statusbar"
+                           statusbar_visible="sin planificar,planificado,en curso,finalizado"
+                    />
+                </header>
+                <sheet>
+                    <notebook>
+                        <page string="Informacion de la Visita">
+
+                            <!-- Página de detalles generales -->
+                            <group string="Detalles Generales">
+
+                                <field name="estado" readonly="True"/>
+                                <field name="visita_id_reagendada" readonly="True" invisible="estado != 'reagendado'"/>
+                                <field name="contact_id" readonly="estado != 'sin planificar'"/>
+                                <field name="direccion_contacto"/>
+                                <field name="motivo" readonly="estado != 'sin planificar'"/>
+                                <field name="hora_programada" readonly="estado != 'sin planificar'"/>
+                                <field name="fecha_fin" readonly="estado != 'sin planificar'"/>
+                                <field name="horas_programada"/>
+                                horas_programada
+                                <field name="rutero_id"/>
+                            </group>
+
+                            <!-- Página de resultado de la visita -->
+                            <group string="Resultado De La Visita"
+                                   invisible="estado == 'sin planificar' or estado == 'planificado' or estado == 'reagendado'">
+                                <field name="hora_inicio_visita" readonly="True"/>
+                                <field name="hora_fin_visita" readonly="True"/>
+
+                                <field name="efectiva" invisible="not hora_inicio_visita"
+                                       readonly="estado == 'finalizado'"/>
+                                <field name="razon_no_venta" invisible="efectiva == True"
+                                       readonly="estado == 'finalizado'"/>
+                                <field name="descripcion_no_venta"
+                                       invisible="efectiva == True" widget="text"
+                                       readonly="estado == 'finalizado'"
+                                       required="True"/>
+
+                                <field name="visit_images" widget="many2many_binary"
+                                       invisible="not hora_inicio_visita"
+                                       readonly="estado == 'finalizado'"/>
+                                <field name="observaciones" widget="text"
+                                       readonly="estado == 'finalizado'"
+                                       required="estado == 'en curso'"/>ç
+                            </group>
+
+                        </page>
+
+                        <!-- Página de Reagendado -->
+                        <page string="Reagendar la Visita" invisible="estado != 'planificado'">
+                            <group>
+                                <field name="nueva_fecha_programada"/>
+                                <field name="descripcion_motivo_reagendado" widget="text"/>
+                                <button string="Reagendar" class="btn-danger" type="object"
+                                        name="action_reagendar_visita"
+                                />
+                            </group>
+                        </page>
+
+                        <!-- Página de Planificar visita -->
+                        <page string="Proxima Visita" invisible="estado != 'finalizado'" >
+                            <group>
+                                <field name="visita_id_planificada"/>
+                                <field name="fecha_nueva_planificada" readonly="visita_id_planificada"/>
+                                <field name="motivo_planificar" readonly="visita_id_planificada"/>
+
+                                <button string="Planificar" class="btn-info" type="object"
+                                        name="action_planificar_visita" invisible="visita_id_planificada"
+                                />
+                            </group>
+                        </page>
+
+                    </notebook>
                 </sheet>
 
                 <div class="oe_chatter">

@@ -16,6 +16,7 @@
         'security/ir.model.access.csv',
         'views/menu.xml',
         'views/visita.xml',
+        'views/cliente.xml'
     ],
     'images': ['static/description/icon.png'],
     'installable': True,

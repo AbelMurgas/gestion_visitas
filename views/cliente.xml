@@ -1,0 +1,51 @@
+<odoo>
+
+
+
+
+
+
+    <record id="view_tree_clientes" model="ir.ui.view">
+        <field name="name">gestion_visitas.cliente.tree</field>
+        <field name="model">gestion_visitas.cliente</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="rutero_id"/>
+                <field name="cliente_id" />
+                <field name="linea"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_cliente" model="ir.actions.act_window">
+        <field name="name">Clientes</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">gestion_visitas.cliente</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_tree_clientes"/>
+    </record>
+
+    <record id="view_form_cliente" model="ir.ui.view">
+        <field name="name">gestion_visitas.cliente.form</field>
+        <field name="model">gestion_visitas.cliente</field>
+        <field name="arch" type="xml">
+
+            <form>
+                <sheet>
+                    <group string="Asignaciòn de cliente">
+                        <field name="rutero_id"/>
+                        <field name="cliente_id"/>
+                        <field name="linea"/>
+                    </group>
+                </sheet>
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids" options="{'post_refresh': 'recipients'}"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+     <menuitem id="menu_clientes" name="Clientes" sequence="1" action="action_cliente" parent="menu_visita"/>
+</odoo>

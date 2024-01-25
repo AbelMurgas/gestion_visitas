@@ -1,4 +1,6 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
+
 
 class Visita(models.Model):
     _name = 'gestion_visitas.visita'
@@ -8,32 +10,44 @@ class Visita(models.Model):
     display_name = fields.Char(string="Display Name", compute="get_display_name", store=True)
 
     # --- Estados ---
+
     estado = fields.Selection([
-        ('finalizado', 'Finalizado'),
+        ('sin planificar', 'Sin Planificar'),
         ('planificado', 'Planificado'),
-        ('en curso', 'En curso'),
-        ('expirado', 'Expirado'),
-        ('sin planificar', 'Sin Planificar')
+        ('en curso', 'En Curso'),
+        ('finalizado', 'Finalizado'),
+        ('reagendado', 'Reagendado')
     ], string='Estado', default='sin planificar', tracking=True)
 
-    # --- Detalles Generales
+    # --- Detalles Generales ---
     rutero_id = fields.Many2one('res.users', string='Rutero', readonly=True, required=True,
                                 default=lambda self: self.env.user)
 
-    contact_id = fields.Many2one('res.partner', string='Contacto', required=True,
-                                 tracking=True, store=True)
+    contact_id = fields.Many2one('res.partner', string='Cliente', required=True)
     direccion_contacto = fields.Char(string='Dirección del Contacto', related='contact_id.street', readonly=True)
     motivo = fields.Selection([
         ('venta', 'Venta'),
         ('seguimiento', 'Seguimiento'),
         ('otro', 'Otro')
     ], string='Motivo de Visita', required=True, tracking=True)
-    hora_programada = fields.Datetime(string='Fecha programada', tracking=True,
+    hora_programada = fields.Datetime(string='Inicio - Fecha programada', tracking=True,
                                       store=True)
+    fecha_fin = fields.Datetime(string='Final - Fecha progamada', tracking=True,
+                                store=True)
+    horas_programada = fields.Float(string='Horas de la visita', compute='_compute_horas_programada', store=True,
+                                    readonly=True)
+    # --- Smart Button ---
+    oportunity_count = fields.Integer(compute='compute_count')
+
+    def compute_count(self):
+        for record in self:
+            record.oportunity_count = self.env['crm.lead'].search_count(
+                [('partner_id', '=', self.contact_id.id)])
 
     # --- Detalles de la visita ---
     hora_inicio_visita = fields.Datetime(string='Hora de inicio Visita', tracking=True)
     hora_fin_visita = fields.Datetime(string='Hora de fin Visita', tracking=True)
+
 
     efectiva = fields.Boolean(string='Visita Efectiva', default=True, tracking=True)
 
@@ -42,15 +56,25 @@ class Visita(models.Model):
         ('competencia', 'Competencia'),
         ('no hay interès', 'No Hay Interés'),
         ('cliente no responde', 'Cliente No Responde'),
-        ('re-agendar', 'Re-Agendar'),
         ('otro', 'Otro')
     ], string='Razón de no Efectiva', tracking=True)
     descripcion_no_venta = fields.Text(string='Descripción de No Venta', tracking=True)
     visit_images = fields.Many2many('ir.attachment', string='Carga de archivos', tracking=True)
     observaciones = fields.Text(string='Observaciones')
-    # En caso de Re-Agendar
-    descripcion_motivo_reagendado = fields.Text(string='Descripcion de Motivo de Re-Agenda', tracking=True)
+
+    # --- En caso de Re-Agendar ---
+    descripcion_motivo_reagendado = fields.Text(string='Descripcion de Motivo de Re-Agenda')
     nueva_fecha_programada = fields.Datetime(string='Nueva Fecha Programada')
+    visita_id_reagendada = fields.Many2one('gestion_visitas.visita', string='Visita Reagendada', readonly=True)
+
+    # --- Planificar nueva visita---
+    fecha_nueva_planificada = fields.Datetime(string='Fecha Programada')
+    visita_id_planificada = fields.Many2one('gestion_visitas.visita', string='Visita Reagendada', readonly=True)
+    motivo_planificar = fields.Selection([
+        ('venta', 'Venta'),
+        ('seguimiento', 'Seguimiento'),
+        ('otro', 'Otro')
+    ], string='Motivo de Visita', default=lambda self: self.motivo, tracking=True)
 
     @api.onchange('efectiva')
     def _onchange_efectiva(self):
@@ -95,6 +119,51 @@ class Visita(models.Model):
                         'motivo': visita.motivo,
                     }
                     self.env['gestion_visitas.visita'].create(nueva_visita_vals)
+
+        return True
+
+    def action_reagendar_visita(self):
+        for visita in self:
+            nueva_fecha_programada = visita.nueva_fecha_programada
+            if nueva_fecha_programada:
+                nueva_visita_vals = {
+                    'estado': 'planificado',
+                    'rutero_id': visita.rutero_id.id,
+                    'contact_id': visita.contact_id.id,
+                    'direccion_contacto': visita.direccion_contacto,
+                    'hora_programada': nueva_fecha_programada,
+                    'motivo': visita.motivo,
+                }
+                nueva_visita = self.env['gestion_visitas.visita'].create(nueva_visita_vals)
+
+                visita.write({
+                    'estado': 'reagendado',
+                    'visita_id_reagendada': nueva_visita.id,
+                })
+            else:
+                raise ValidationError('Se necesita la fecha programada para reagendar la visita.')
+        return True
+
+    def action_planificar_visita(self):
+        for visita in self:
+            fecha_nueva_planificada = visita.fecha_nueva_planificada
+            if fecha_nueva_planificada:
+                nueva_visita_vals = {
+                    'estado': 'planificado',
+                    'rutero_id': visita.rutero_id.id,
+                    'contact_id': visita.contact_id.id,
+                    'direccion_contacto': visita.direccion_contacto,
+                    'hora_programada': fecha_nueva_planificada,
+                    'motivo': visita.motivo_planificar,
+                }
+                nueva_visita = self.env['gestion_visitas.visita'].create(nueva_visita_vals)
+
+                visita.write({
+                    'visita_id_planificada': nueva_visita.id,
+
+                })
+            else:
+                raise ValidationError('Se necesita la fecha programada para planificar la visita.')
         return True
 
     @api.model
@@ -107,3 +176,65 @@ class Visita(models.Model):
         for visita in self:
             display_name = f"{visita.contact_id.name if visita.contact_id.name else 'Nueva Visita'} - {visita.estado}"
             visita.display_name = display_name
+
+    def action_guardar_datos(self):
+        for visita in self:
+            # Crear un nuevo registro basado en los datos actuales
+            nueva_visita_vals = {
+                'estado': 'planificado',
+                'rutero_id': visita.rutero_id.id,
+                'contact_id': visita.contact_id.id,
+                'direccion_contacto': visita.direccion_contacto,
+                'motivo': visita.motivo,
+                'hora_programada': visita.hora_programada,
+                # Agrega más campos según sea necesario
+            }
+
+            # Crear el nuevo registro
+            nueva_visita = self.env['gestion_visitas.visita'].create(nueva_visita_vals)
+
+        # Puedes agregar lógica adicional aquí, si es necesario
+        return True
+
+    def open_opportunities(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Oportunidades',
+            'view_mode': 'tree,form',
+            'res_model': 'crm.lead',
+            'domain': [('partner_id', '=', self.contact_id.id)],  # Ajusta el campo para el contacto adecuado
+            'context': "{'create': False}"
+        }
+
+    @api.depends('hora_programada', 'fecha_fin')
+    def _compute_horas_programada(self):
+        for visita in self:
+            if visita.hora_programada and visita.fecha_fin:
+                hora_programada = fields.Datetime.from_string(visita.hora_programada)
+                hora_fin = fields.Datetime.from_string(visita.fecha_fin)
+
+                # Calcula la diferencia en horas y minutos
+                diferencia = (hora_fin - hora_programada).total_seconds() / 3600.0
+
+                visita.horas_programada = round(diferencia, 2)
+
+    @api.constrains('fecha_fin')
+    def _check_same_day(self):
+        for visita in self:
+            if visita.hora_programada and visita.fecha_fin:
+                fecha_programada = fields.Datetime.from_string(visita.hora_programada).date()
+                fecha_fin = fields.Datetime.from_string(visita.fecha_fin).date()
+
+                if fecha_programada != fecha_fin:
+                    raise ValidationError("La fecha de finalización debe ser la misma que la fecha programada.")
+
+    @api.constrains('fecha_fin', 'hora_programada')
+    def _check_end_time(self):
+        for visita in self:
+            if visita.hora_programada and visita.fecha_fin:
+                hora_inicio = fields.Datetime.from_string(visita.hora_programada).time()
+                hora_fin = fields.Datetime.from_string(visita.fecha_fin).time()
+
+                if hora_fin <= hora_inicio:
+                    raise ValidationError("La hora de finalización debe ser mayor que la hora de inicio.")

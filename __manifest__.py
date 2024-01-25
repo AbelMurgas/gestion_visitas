@@ -14,7 +14,6 @@
     'depends': ['mail'],
     'data': [
         'security/ir.model.access.csv',
-        'views/menu.xml',
         'views/visita.xml',
         'views/cliente.xml'
     ],

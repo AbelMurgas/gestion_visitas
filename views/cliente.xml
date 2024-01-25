@@ -47,5 +47,12 @@
         </field>
     </record>
 
-     <menuitem id="menu_clientes" name="Clientes" sequence="1" action="action_cliente" parent="menu_visita"/>
+     <menuitem id="menu_visita_cliente"
+                  name="Clientes"
+                parent="menu_visita_root"
+                  />
+    <menuitem id="menu_visita_gestion"
+                  name="Gestion"
+                parent="menu_visita_cliente"
+                  />
 </odoo>

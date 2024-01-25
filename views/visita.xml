@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
 
-    <record id="action_visita" model="ir.actions.act_window">
-        <field name="name">visita</field>
-        <field name="type">ir.actions.act_window</field>
-        <field name="res_model">gestion_visitas.visita</field>
-        <field name="view_mode">tree,form,calendar</field>
-        <field name="context">{'search_default_today_and_current_rutero':1}</field>
-        <field name="view_id" ref="view_tree_visita"/>
-    </record>
 
     <record id="view_calendar_visita" model="ir.ui.view">
         <field name="name">gestion_visitas.visita.calendar</field>
@@ -50,7 +42,14 @@
             </tree>
         </field>
     </record>
-
+    <record id="action_visita" model="ir.actions.act_window">
+        <field name="name">visita</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">gestion_visitas.visita</field>
+        <field name="view_mode">tree,form,calendar</field>
+        <field name="context">{'search_default_today_and_current_rutero':1}</field>
+        <field name="view_id" ref="view_tree_visita"/>
+    </record>
     <record id="view_form_visita" model="ir.ui.view">
         <field name="name">gestion_visitas.visita.form</field>
         <field name="model">gestion_visitas.visita</field>
@@ -63,8 +62,8 @@
                         <button class="oe_stat_button" type="object"
                                 name="open_opportunities"
                                 icon="fa-address-book-o">
-                        <field string="Oportunidades" name="oportunity_count" widget="statinfo"/>
-                         </button>
+                            <field string="Oportunidades" name="oportunity_count" widget="statinfo"/>
+                        </button>
 
                     </div>
                     <button string="Planificar Visita" class="oe_highlight" invisible="estado != 'sin planificar'"
@@ -136,7 +135,7 @@
                         </page>
 
                         <!-- Página de Planificar visita -->
-                        <page string="Proxima Visita" invisible="estado != 'finalizado'" >
+                        <page string="Proxima Visita" invisible="estado != 'finalizado'">
                             <group>
                                 <field name="visita_id_planificada"/>
                                 <field name="fecha_nueva_planificada" readonly="visita_id_planificada"/>
@@ -158,6 +157,11 @@
             </form>
         </field>
     </record>
+
+    <menuitem id="menu_visita_root"
+              name="Visitas"
+              web_icon="gestion_visitas,static/description/icon.png"
+              action="action_visita"/>
 
 
 </odoo>

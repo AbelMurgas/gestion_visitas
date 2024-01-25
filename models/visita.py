@@ -30,9 +30,9 @@ class Visita(models.Model):
         ('seguimiento', 'Seguimiento'),
         ('otro', 'Otro')
     ], string='Motivo de Visita', required=True, tracking=True)
-    hora_programada = fields.Datetime(string='Inicio - Fecha programada', tracking=True,
+    hora_programada = fields.Datetime(string='Inicio Fecha programada', tracking=True,
                                       store=True)
-    fecha_fin = fields.Datetime(string='Final - Fecha progamada', tracking=True,
+    fecha_fin = fields.Datetime(string='Final Fecha progamada', tracking=True,
                                 store=True)
     horas_programada = fields.Float(string='Horas de la visita', compute='_compute_horas_programada', store=True,
                                     readonly=True)

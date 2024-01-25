@@ -42,6 +42,7 @@
             </tree>
         </field>
     </record>
+
     <record id="action_visita" model="ir.actions.act_window">
         <field name="name">visita</field>
         <field name="type">ir.actions.act_window</field>
@@ -50,6 +51,7 @@
         <field name="context">{'search_default_today_and_current_rutero':1}</field>
         <field name="view_id" ref="view_tree_visita"/>
     </record>
+
     <record id="view_form_visita" model="ir.ui.view">
         <field name="name">gestion_visitas.visita.form</field>
         <field name="model">gestion_visitas.visita</field>
@@ -80,60 +82,76 @@
                     />
                 </header>
                 <sheet>
+                    <div class="oe_title mb24">
+                        <h1>
+                            <field name="display_name" readonly="True"/>
+                        </h1>
+                    </div>
+
+
+                    <!-- Página de detalles generales -->
+                    <group>
+                        <group>
+                            <field name="estado" readonly="True"/>
+                            <field name="visita_id_reagendada" readonly="True"
+                                   invisible="estado != 'reagendado'"/>
+                            <field name="contact_id" readonly="estado != 'sin planificar'"/>
+                            <field name="direccion_contacto"/>
+                            <field name="motivo" readonly="estado != 'sin planificar'"/>
+                        </group>
+                        <group>
+                            <field name="hora_programada" readonly="estado != 'sin planificar'"/>
+                            <field name="fecha_fin" readonly="estado != 'sin planificar'"/>
+                            <field name="horas_programada"/>
+                            <field name="rutero_id"/>
+                        </group>
+
+                    </group>
+
+
                     <notebook>
-                        <page string="Informacion de la Visita">
-
-                            <!-- Página de detalles generales -->
-                            <group string="Detalles Generales">
-
-                                <field name="estado" readonly="True"/>
-                                <field name="visita_id_reagendada" readonly="True" invisible="estado != 'reagendado'"/>
-                                <field name="contact_id" readonly="estado != 'sin planificar'"/>
-                                <field name="direccion_contacto"/>
-                                <field name="motivo" readonly="estado != 'sin planificar'"/>
-                                <field name="hora_programada" readonly="estado != 'sin planificar'"/>
-                                <field name="fecha_fin" readonly="estado != 'sin planificar'"/>
-                                <field name="horas_programada"/>
-                                horas_programada
-                                <field name="rutero_id"/>
-                            </group>
-
+                        <page string="Resultado De La Visita"
+                              invisible="estado == 'sin planificar' or estado == 'planificado' or estado == 'reagendado'">
                             <!-- Página de resultado de la visita -->
-                            <group string="Resultado De La Visita"
-                                   invisible="estado == 'sin planificar' or estado == 'planificado' or estado == 'reagendado'">
-                                <field name="hora_inicio_visita" readonly="True"/>
-                                <field name="hora_fin_visita" readonly="True"/>
+                            <group>
+                                <group>
+                                    <field name="hora_inicio_visita" readonly="True"/>
+                                    <field name="hora_fin_visita" readonly="True"/>
 
-                                <field name="efectiva" invisible="not hora_inicio_visita"
-                                       readonly="estado == 'finalizado'"/>
-                                <field name="razon_no_venta" invisible="efectiva == True"
-                                       readonly="estado == 'finalizado'"/>
-                                <field name="descripcion_no_venta"
-                                       invisible="efectiva == True" widget="text"
-                                       readonly="estado == 'finalizado'"
-                                       required="True"/>
+                                    <field name="efectiva" invisible="not hora_inicio_visita"
+                                           readonly="estado == 'finalizado'"/>
+                                    <field name="razon_no_venta" invisible="efectiva == True"
+                                           readonly="estado == 'finalizado'"/>
+                                    <field name="descripcion_no_venta"
+                                           invisible="efectiva == True" widget="text"
+                                           readonly="estado == 'finalizado'"
+                                           required="True"/>
 
-                                <field name="visit_images" widget="many2many_binary"
-                                       invisible="not hora_inicio_visita"
-                                       readonly="estado == 'finalizado'"/>
-                                <field name="observaciones" widget="text"
-                                       readonly="estado == 'finalizado'"
-                                       required="estado == 'en curso'"/>ç
+                                    <field name="visit_images" widget="many2many_binary"
+                                           invisible="not hora_inicio_visita"
+                                           readonly="estado == 'finalizado'"/>
+                                    <field name="observaciones" widget="text"
+                                           readonly="estado == 'finalizado'"
+                                           required="estado == 'en curso'"/>ç
+                                </group>
                             </group>
+
 
                         </page>
 
                         <!-- Página de Reagendado -->
                         <page string="Reagendar la Visita" invisible="estado != 'planificado'">
                             <group>
-                                <field name="nueva_fecha_programada"/>
-                                <field name="descripcion_motivo_reagendado" widget="text"/>
-                                <button string="Reagendar" class="btn-danger" type="object"
-                                        name="action_reagendar_visita"
-                                />
+                                <group>
+                                    <field name="nueva_fecha_programada"/>
+                                    <field name="descripcion_motivo_reagendado" widget="text"/>
+                                    <button string="Reagendar" class="btn-danger" type="object"
+                                            name="action_reagendar_visita"
+                                    />
+                                </group>
+
                             </group>
                         </page>
-
                         <!-- Página de Planificar visita -->
                         <page string="Proxima Visita" invisible="estado != 'finalizado'">
                             <group>

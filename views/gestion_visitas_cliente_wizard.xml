@@ -1,0 +1,20 @@
+<odoo>
+
+    <record id="view_form_cambiar_rutero_wizard" model="ir.ui.view">
+        <field name="name">gestion_visitas.cliente.wizard.form</field>
+        <field name="model">gestion_visitas.cliente.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="nuevo_rutero_id"/>
+                </group>
+                <footer>
+                    <button string="Cambiar Rutero" type="object" class="oe_highlight"
+                            name="action_cambiar_rutero"/>
+                    <button string="Cancelar" class="oe_link" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

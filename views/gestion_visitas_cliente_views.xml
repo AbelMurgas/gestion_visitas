@@ -1,17 +1,17 @@
 <odoo>
 
 
-
-
-
-
     <record id="view_tree_clientes" model="ir.ui.view">
         <field name="name">gestion_visitas.cliente.tree</field>
         <field name="model">gestion_visitas.cliente</field>
         <field name="arch" type="xml">
             <tree>
+                <header>
+                    <button string="Cambiar Rutero" type="object" class="oe_highlight"
+                            name="cambiar_rutero_action"/>
+                </header>
                 <field name="rutero_id"/>
-                <field name="cliente_id" />
+                <field name="cliente_id"/>
                 <field name="linea"/>
             </tree>
         </field>
@@ -46,13 +46,4 @@
             </form>
         </field>
     </record>
-
-     <menuitem id="menu_visita_cliente"
-                  name="Clientes"
-                parent="menu_visita_root"
-                  />
-    <menuitem id="menu_visita_gestion"
-                  name="Gestion"
-                parent="menu_visita_cliente"
-                  />
 </odoo>

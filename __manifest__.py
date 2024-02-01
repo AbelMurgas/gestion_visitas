@@ -14,8 +14,11 @@
     'depends': ['mail'],
     'data': [
         'security/ir.model.access.csv',
-        'views/visita.xml',
-        'views/cliente.xml'
+        'views/gestion_visitas_visita_views.xml',
+        'views/gestion_visitas_cliente_views.xml',
+'views/gestion_visitas_cliente_wizard.xml',
+        'views/gestion_visitas_menu_views.xml',
+
     ],
     'images': ['static/description/icon.png'],
     'installable': True,

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Top menu item -->
+    <menuitem
+        id="gestion_visitas_menu_root"
+        name="Visitas"
+        sequence="10"
+         web_icon="gestion_visitas,static/description/icon.png"
+    />
+
+    <!-- Submenu - Visita -->
+    <menuitem
+        id="gestion_visitas_menu_visita"
+        name="Visita"
+        parent="gestion_visitas_menu_root"
+        action="gestion_visitas.action_visita"
+        sequence="1"
+    />
+
+    <!-- Submenu - Clientes -->
+    <menuitem
+        id="gestion_visitas_menu_clientes"
+        name="Clientes"
+        parent="gestion_visitas_menu_root"
+        action="gestion_visitas.action_cliente"
+        sequence="2"
+    />
+
+
+</odoo>

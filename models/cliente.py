@@ -30,3 +30,22 @@ class Cliente(models.Model):
                 existing_clientes = self.search(domain)
                 if existing_clientes and len(existing_clientes) > 1:
                     raise ValidationError('Este cliente ya está asignado a otro rutero con la misma línea.')
+
+    @api.model
+    def cambiar_rutero_action(self, selected_clientes):
+
+        # Abre la vista del formulario del asistente como pop-up
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Cambiar Rutero - Clientes seleccionados',
+            'res_model': 'gestion_visitas.cliente.wizard',
+            'view_mode': 'form',
+            'view_id': self.env.ref('gestion_visitas.view_form_cambiar_rutero_wizard').id,
+            'view_type': 'form',
+            'target': 'new',
+            'context': {
+                'default_cliente_ids': [(6, 0, selected_clientes)],
+            },
+        }
+
+

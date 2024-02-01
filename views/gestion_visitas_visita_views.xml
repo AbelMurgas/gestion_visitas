@@ -175,11 +175,4 @@
             </form>
         </field>
     </record>
-
-    <menuitem id="menu_visita_root"
-              name="Visitas"
-              web_icon="gestion_visitas,static/description/icon.png"
-              action="action_visita"/>
-
-
 </odoo>

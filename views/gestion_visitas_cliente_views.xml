@@ -1,5 +1,43 @@
 <odoo>
 
+    <record id="view_kanban_clientes" model="ir.ui.view">
+        <field name="name">gestion_visitas.cliente.kanban</field>
+        <field name="model">gestion_visitas.cliente</field>
+        <field name="arch" type="xml">
+
+            <kanban class="o_res_partner_kanban">
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_image">
+                                <field name="avatar_image" widget="image"/>
+                            </div>
+                            <div class="oe_kanban_details">
+                                <strong>
+                                    <field name="name"/>
+                                </strong>
+                                <p>
+                                    <field name="rutero_id"/>
+                                    <br/>
+                                    <field name="linea" widget="many2many_tags"/>
+                                </p>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="action_inactivar_cliente" model="ir.actions.server">
+        <field name="name">Inactivar Cliente</field>
+        <field name="model_id" ref="gestion_visitas.model_gestion_visitas_cliente"/>
+        <field name="binding_model_id" ref="gestion_visitas.model_gestion_visitas_cliente"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">model.inactivar_cliente()</field>
+    </record>
+
 
     <record id="view_tree_clientes" model="ir.ui.view">
         <field name="name">gestion_visitas.cliente.tree</field>
@@ -10,20 +48,15 @@
                     <button string="Cambiar Rutero" type="object" class="oe_highlight"
                             name="cambiar_rutero_action"/>
                 </header>
+                <field name="id"/>
                 <field name="rutero_id"/>
                 <field name="cliente_id"/>
-                <field name="linea"/>
+                <field name="linea" widget="many2many_tags"/>
+                <field name="status"/>
             </tree>
         </field>
     </record>
 
-    <record id="action_cliente" model="ir.actions.act_window">
-        <field name="name">Clientes</field>
-        <field name="type">ir.actions.act_window</field>
-        <field name="res_model">gestion_visitas.cliente</field>
-        <field name="view_mode">tree,form</field>
-        <field name="view_id" ref="view_tree_clientes"/>
-    </record>
 
     <record id="view_form_cliente" model="ir.ui.view">
         <field name="name">gestion_visitas.cliente.form</field>
@@ -31,13 +64,16 @@
         <field name="arch" type="xml">
 
             <form>
-                <sheet>
-                    <group string="Asignaciòn de cliente">
-                        <field name="rutero_id"/>
-                        <field name="cliente_id"/>
-                        <field name="linea"/>
-                    </group>
-                </sheet>
+                <div class="oe_title mb24">
+                    <h1>
+                        <field name="display_name" readonly="True"/>
+                    </h1>
+                </div>
+                <group>
+                    <field name="rutero_id"/>
+                    <field name="cliente_id"/>
+                    <field name="linea" widget="many2many_tags"/>
+                </group>
 
                 <div class="oe_chatter">
                     <field name="message_follower_ids"/>
@@ -45,5 +81,41 @@
                 </div>
             </form>
         </field>
+    </record>
+
+    <record id="view_search_clientes_rutero" model="ir.ui.view">
+        <field name="name">Cliente Search View</field>
+        <field name="model">gestion_visitas.cliente</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="rutero_id" string="Rutero"/>
+                <field name="cliente_id"/>
+                <field name="linea"/>
+                <field name="name"/>
+                <group expand="1" string="Group By">
+                    <filter string="Ruteros Asignados" name="rutero" context="{'group_by': 'rutero_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_graph_cliente" model="ir.ui.view">
+        <field name="name">gestion_visitas.cliente.graph</field>
+        <field name="model">gestion_visitas.cliente</field>
+        <field name="arch" type="xml">
+            <graph string="Clientes por rutero" type="bar">
+                <field name="rutero_id" type="row"/>
+            </graph>
+        </field>
+    </record>
+
+
+    <record id="action_cliente" model="ir.actions.act_window">
+        <field name="name">Clientes</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">gestion_visitas.cliente</field>
+        <field name="view_mode">kanban,tree,form,graph</field>
+        <field name="context">{'search_default_rutero': 1}</field>
+        <field name="view_id" ref="view_kanban_clientes"/>
     </record>
 </odoo>

@@ -11,7 +11,7 @@
                 <field name="rutero_id"/>
                 <field name="hora_programada"/>
                 <field name="estado"/>
-                <field name="contact_id"/>
+                <field name="cliente_id"/>
             </calendar>
         </field>
     </record>
@@ -22,7 +22,7 @@
         <field name="arch" type="xml">
             <search>
                 <field name="rutero_id"/>
-                <field name="contact_id"/>
+                <field name="cliente_id"/>
                 <filter string="Mis visitas del dia" name="today_and_current_rutero"
                         domain="[('rutero_id', '=', uid), ('hora_programada', '&gt;=', context_today().strftime('%%Y-%%m-%%d 00:00:00')), ('hora_programada', '&lt;=', context_today().strftime('%%Y-%%m-%%d 23:59:59'))]"/>
             </search>
@@ -36,7 +36,7 @@
             <tree default_order='hora_programada' decoration-info="estado == 'finalizado'"
                   decoration-success="estado == 'en curso'">
                 <field name="rutero_id"/>
-                <field name="contact_id"/>
+                <field name="cliente_id"/>
                 <field name="hora_programada"/>
                 <field name="estado"/>
             </tree>
@@ -47,10 +47,22 @@
         <field name="name">visita</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">gestion_visitas.visita</field>
-        <field name="view_mode">tree,form,calendar</field>
+        <field name="view_mode">tree,form,calendar,graph</field>
         <field name="context">{'search_default_today_and_current_rutero':1}</field>
         <field name="view_id" ref="view_tree_visita"/>
     </record>
+
+    <!--    <record id="view_map_visita" model="ir.ui.view">-->
+    <!--    <field name="name">gestion_visitas.visita.map</field>-->
+    <!--    <field name="model">gestion_visitas.visita</field>-->
+    <!--    <field name="arch" type="xml">-->
+    <!--        <map res_partner="cliente" routing="true"-->
+    <!--            hide_name="true">-->
+    <!--             <field name="cliente" string="Cliente"/>-->
+    <!--        </map>-->
+    <!--    </field>-->
+    <!--</record>-->
+
 
     <record id="view_form_visita" model="ir.ui.view">
         <field name="name">gestion_visitas.visita.form</field>
@@ -58,16 +70,7 @@
         <field name="arch" type="xml">
 
             <form>
-
                 <header>
-                    <div class="oe_button_box" name="button_box" invisible="estado == 'sin planificar'">
-                        <button class="oe_stat_button" type="object"
-                                name="open_opportunities"
-                                icon="fa-address-book-o">
-                            <field string="Oportunidades" name="oportunity_count" widget="statinfo"/>
-                        </button>
-
-                    </div>
                     <button string="Planificar Visita" class="oe_highlight" invisible="estado != 'sin planificar'"
                             type="object" name="action_guardar_datos"/>
                     <button string="Iniciar Visita" class="btn-primary" type="object"
@@ -78,16 +81,20 @@
                     />
 
                     <field name="estado" widget="statusbar"
-                           statusbar_visible="sin planificar,planificado,en curso,finalizado"
-                    />
+                           statusbar_visible="sin planificar,planificado,en curso,finalizado"/>
                 </header>
                 <sheet>
+                    <div name="button_box">
+                        <button invisible="estado == 'sin planificar'" class="oe_stat_button" type="object"
+                                name="open_opportunities" icon="fa-address-book-o">
+                            <field string="Oportunidades" name="oportunity_count" widget="statinfo"/>
+                        </button>
+                    </div>
                     <div class="oe_title mb24">
                         <h1>
                             <field name="display_name" readonly="True"/>
                         </h1>
                     </div>
-
 
                     <!-- Página de detalles generales -->
                     <group>
@@ -95,7 +102,7 @@
                             <field name="estado" readonly="True"/>
                             <field name="visita_id_reagendada" readonly="True"
                                    invisible="estado != 'reagendado'"/>
-                            <field name="contact_id" readonly="estado != 'sin planificar'"/>
+                            <field name="cliente_id" readonly="estado != 'sin planificar'"/>
                             <field name="direccion_contacto"/>
                             <field name="motivo" readonly="estado != 'sin planificar'"/>
                         </group>
@@ -173,6 +180,17 @@
                     <field name="message_ids" options="{'post_refresh': 'recipients'}"/>
                 </div>
             </form>
+        </field>
+    </record>
+
+    <record id="view_graph_visita" model="ir.ui.view">
+        <field name="name">gestion_visitas.visita.graph</field>
+        <field name="model">gestion_visitas.visita</field>
+        <field name="arch" type="xml">
+            <graph string="Visitas por rutero" type="bar" stacked="False">
+                <field name="rutero_id" type="row"/>
+                <field name="estado" type="col"/>
+            </graph>
         </field>
     </record>
 </odoo>

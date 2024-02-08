@@ -6,7 +6,7 @@ class Visita(models.Model):
     _name = 'gestion_visitas.visita'
     _inherit = 'mail.thread'
     _description = 'Registro de Visitas'
-    _rec_name = "display_name"  # Apunta a el siguiente atributo
+    _rec_name = "display_name"
     display_name = fields.Char(string="Display Name", compute="get_display_name", store=True)
 
     # --- Estados ---
@@ -20,19 +20,22 @@ class Visita(models.Model):
     ], string='Estado', default='sin planificar', tracking=True)
 
     # --- Detalles Generales ---
-    rutero_id = fields.Many2one('res.users', string='Rutero', readonly=True, required=True,
+    rutero_id = fields.Many2one('res.users', string='Rutero', readonly=False, required=True,
                                 default=lambda self: self.env.user)
 
-    contact_id = fields.Many2one('res.partner', string='Cliente', required=True)
-    direccion_contacto = fields.Char(string='Dirección del Contacto', related='contact_id.street', readonly=True)
+    cliente_id = fields.Many2one('gestion_visitas.cliente', string='Cliente', required=True,
+                                 domain="[('rutero_id','=',rutero_id)]")
+    direccion_contacto = fields.Char(string='Dirección del Contacto', related='cliente_id.cliente_id.street',
+                                     readonly=True)
+
     motivo = fields.Selection([
         ('venta', 'Venta'),
         ('seguimiento', 'Seguimiento'),
         ('otro', 'Otro')
     ], string='Motivo de Visita', required=True, tracking=True)
-    hora_programada = fields.Datetime(string='Inicio Fecha programada', tracking=True,
+    hora_programada = fields.Datetime(string='Inicio Fecha programada', tracking=True, required=True,
                                       store=True)
-    fecha_fin = fields.Datetime(string='Final Fecha progamada', tracking=True,
+    fecha_fin = fields.Datetime(string='Final Fecha progamada', tracking=True, required=True,
                                 store=True)
     horas_programada = fields.Float(string='Horas de la visita', compute='_compute_horas_programada', store=True,
                                     readonly=True)
@@ -42,12 +45,11 @@ class Visita(models.Model):
     def compute_count(self):
         for record in self:
             record.oportunity_count = self.env['crm.lead'].search_count(
-                [('partner_id', '=', self.contact_id.id)])
+                [('partner_id', '=', self.cliente_id.cliente_id.id)])
 
     # --- Detalles de la visita ---
     hora_inicio_visita = fields.Datetime(string='Hora de inicio Visita', tracking=True)
     hora_fin_visita = fields.Datetime(string='Hora de fin Visita', tracking=True)
-
 
     efectiva = fields.Boolean(string='Visita Efectiva', default=True, tracking=True)
 
@@ -113,7 +115,7 @@ class Visita(models.Model):
                     nueva_visita_vals = {
                         'estado': 'planificado',
                         'rutero_id': visita.rutero_id.id,
-                        'contact_id': visita.contact_id.id,
+                        'cliente_id': visita.cliente_id.cliente_id.id,
                         'direccion_contacto': visita.direccion_contacto,
                         'hora_programada': nueva_fecha_programada,
                         'motivo': visita.motivo,
@@ -129,7 +131,7 @@ class Visita(models.Model):
                 nueva_visita_vals = {
                     'estado': 'planificado',
                     'rutero_id': visita.rutero_id.id,
-                    'contact_id': visita.contact_id.id,
+                    'cliente_id': visita.cliente_id.cliente_id.id,
                     'direccion_contacto': visita.direccion_contacto,
                     'hora_programada': nueva_fecha_programada,
                     'motivo': visita.motivo,
@@ -151,7 +153,7 @@ class Visita(models.Model):
                 nueva_visita_vals = {
                     'estado': 'planificado',
                     'rutero_id': visita.rutero_id.id,
-                    'contact_id': visita.contact_id.id,
+                    'cliente_id': visita.cliente_id.cliente_id.id,
                     'direccion_contacto': visita.direccion_contacto,
                     'hora_programada': fecha_nueva_planificada,
                     'motivo': visita.motivo_planificar,
@@ -171,29 +173,15 @@ class Visita(models.Model):
         vals['estado'] = 'planificado'
         return super(Visita, self).create(vals)
 
-    @api.depends('contact_id', 'estado')
+    @api.depends('cliente_id', 'estado')
     def get_display_name(self):
         for visita in self:
-            display_name = f"{visita.contact_id.name if visita.contact_id.name else 'Nueva Visita'} - {visita.estado}"
+            display_name = f"{visita.cliente_id.cliente_id.name if visita.cliente_id.cliente_id.name else 'Nueva Visita'} - {visita.estado}"
             visita.display_name = display_name
 
     def action_guardar_datos(self):
         for visita in self:
-            # Crear un nuevo registro basado en los datos actuales
-            nueva_visita_vals = {
-                'estado': 'planificado',
-                'rutero_id': visita.rutero_id.id,
-                'contact_id': visita.contact_id.id,
-                'direccion_contacto': visita.direccion_contacto,
-                'motivo': visita.motivo,
-                'hora_programada': visita.hora_programada,
-                # Agrega más campos según sea necesario
-            }
-
-            # Crear el nuevo registro
-            nueva_visita = self.env['gestion_visitas.visita'].create(nueva_visita_vals)
-
-        # Puedes agregar lógica adicional aquí, si es necesario
+            visita.estado = 'planificado'
         return True
 
     def open_opportunities(self):
@@ -203,7 +191,7 @@ class Visita(models.Model):
             'name': 'Oportunidades',
             'view_mode': 'tree,form',
             'res_model': 'crm.lead',
-            'domain': [('partner_id', '=', self.contact_id.id)],  # Ajusta el campo para el contacto adecuado
+            'domain': [('partner_id', '=', self.cliente_id.cliente_id.id)],  # Ajusta el campo para el contacto adecuado
             'context': "{'create': False}"
         }
 
